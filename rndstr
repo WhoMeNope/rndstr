@@ -1,0 +1,89 @@
+#!/bin/bash
+set -u
+DEBUG=1
+
+function print_usage {
+  echo "Usage: rndstr [-anmlu] [-c count]"
+  echo $'\t-h\tprint this usage help'
+  echo $'\t-m\tuse mixed characters, default'
+  echo $'\t-a\tuse alphabetical characters only'
+  echo $'\t-n\tuse numerical characters only'
+  echo $'\t-u\tuppercase'
+  echo $'\t-l\tlowercase'
+  echo $'\t-c n\tprint <n> characters, default=64'
+}
+
+USE_ALPHABETICAL=true
+USE_NUMERICAL=true
+CHARACTER_COUNT=64
+UPPERCASE=true
+LOWERCASE=true
+
+while getopts "c:hanmul" opt
+do
+  case $opt in
+    h)
+      print_usage
+      exit 0
+      ;;
+    u)
+      UPPERCASE=true
+      LOWERCASE=false
+      ;;
+    l)
+      UPPERCASE=false
+      LOWERCASE=true
+      ;;
+    c)
+      CHARACTER_COUNT=${OPTARG:=64}
+      ;;
+    a)
+      USE_ALPHABETICAL=true
+      USE_NUMERICAL=false
+      ;;
+    n)
+      USE_ALPHABETICAL=false
+      USE_NUMERICAL=true
+      ;;
+    m)
+      USE_ALPHABETICAL=true
+      USE_NUMERICAL=true
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+
+function print_random {
+  local filter=''
+  if [ "$USE_ALPHABETICAL" = true ]
+  then
+    if [ "$LOWERCASE" = true ]
+    then
+      filter+='a-z'
+    fi
+    if [ "$UPPERCASE" = true ]
+    then
+      filter+='A-Z'
+    fi
+  fi
+  if [ "$USE_NUMERICAL" = true ]
+  then
+    filter+='0-9'
+  fi
+
+  echo $filter
+
+  local LC_CTYPE=C
+  export LC_CTYPE
+  cat /dev/urandom | tr -dc $filter | head -c $CHARACTER_COUNT
+}
+
+print_random
+
