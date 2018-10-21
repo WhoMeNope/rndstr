@@ -1,6 +1,4 @@
 #!/bin/bash
-set -u
-DEBUG=1
 
 function print_usage {
   echo "Usage: rndstr [-anmlu] [-c count]"
@@ -77,8 +75,6 @@ function print_random {
   then
     filter+='0-9'
   fi
-
-  echo $filter
 
   local LC_CTYPE=C
   export LC_CTYPE
