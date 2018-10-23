@@ -1,51 +1,43 @@
 #!/bin/bash
 
 function print_usage {
-  echo "Usage: rndstr [-anmlu] [-c count]"
-  echo $'\t-h\tprint this usage help'
-  echo $'\t-m\tuse mixed characters, default'
-  echo $'\t-a\tuse alphabetical characters only'
-  echo $'\t-n\tuse numerical characters only'
-  echo $'\t-u\tuppercase'
-  echo $'\t-l\tlowercase'
+  echo "Usage: rndstr [-c count] [-f (uln)]"
+  echo $'\t-h  \tprint this usage help'
   echo $'\t-c n\tprint <n> characters, default=64'
+  echo $'\t-f u\tinclude uppercase letters'
+  echo $'\t   l\tinclude lowercase letters'
+  echo $'\t   n\tinclude numerals'
 }
 
-USE_ALPHABETICAL=true
-USE_NUMERICAL=true
 CHARACTER_COUNT=64
-UPPERCASE=true
-LOWERCASE=true
+FILTER='a-zA-Z0-9'
 
-while getopts "c:hanmul" opt
+while getopts "hc:f:" opt
 do
   case $opt in
     h)
       print_usage
       exit 0
       ;;
-    u)
-      UPPERCASE=true
-      LOWERCASE=false
-      ;;
-    l)
-      UPPERCASE=false
-      LOWERCASE=true
-      ;;
     c)
       CHARACTER_COUNT=${OPTARG:=64}
       ;;
-    a)
-      USE_ALPHABETICAL=true
-      USE_NUMERICAL=false
-      ;;
-    n)
-      USE_ALPHABETICAL=false
-      USE_NUMERICAL=true
-      ;;
-    m)
-      USE_ALPHABETICAL=true
-      USE_NUMERICAL=true
+    f)
+      FILTER=''
+      for i in $(seq 1 ${#OPTARG})
+      do
+        case ${OPTARG:i-1:1} in
+          u)
+            FILTER+='A-Z'
+            ;;
+          l)
+            FILTER+='a-z'
+            ;;
+          n)
+            FILTER+='0-9'
+            ;;
+        esac
+      done
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
@@ -59,27 +51,9 @@ do
 done
 
 function print_random {
-  local filter=''
-  if [ "$USE_ALPHABETICAL" = true ]
-  then
-    if [ "$LOWERCASE" = true ]
-    then
-      filter+='a-z'
-    fi
-    if [ "$UPPERCASE" = true ]
-    then
-      filter+='A-Z'
-    fi
-  fi
-  if [ "$USE_NUMERICAL" = true ]
-  then
-    filter+='0-9'
-  fi
-
   local LC_CTYPE=C
   export LC_CTYPE
-  cat /dev/urandom | tr -dc $filter | head -c $CHARACTER_COUNT
+  cat /dev/urandom | tr -dc $FILTER | head -c $CHARACTER_COUNT
 }
 
 print_random
-
